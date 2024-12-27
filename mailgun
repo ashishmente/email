@@ -1,0 +1,71 @@
+package com.example.emailtest;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Base64;
+
+@SpringBootApplication
+public class EmailtestApplication implements CommandLineRunner {
+
+    private static final String MAILGUN_API_KEY = "e256f0cb3910c28032c6a6702845ed94-2e68d0fb-eb7226d4";
+    private static final String MAILGUN_DOMAIN = "sandbox083fda45960244258072b09b828fad8d.mailgun.org";
+    private static final String MAILGUN_BASE_URL = "https://api.mailgun.net/v3";
+
+    public static void main(String[] args) {
+        SpringApplication.run(EmailtestApplication.class, args);
+    }
+
+    // Function to send an email
+    public String sendEmail(String to, String subject, String body) {
+        String url = MAILGUN_BASE_URL + "/" + MAILGUN_DOMAIN + "/messages";
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Prepare the request body as a MultiValueMap
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("from", "Test User <mailgun@" + MAILGUN_DOMAIN + ">");
+        requestBody.add("to", to);
+        requestBody.add("subject", subject);
+        requestBody.add("text", body);
+
+        // Create headers with Basic Auth
+        HttpHeaders headers = new HttpHeaders();
+        String basicAuth = "Basic " + Base64.getEncoder().encodeToString(("api:" + MAILGUN_API_KEY).getBytes());
+        headers.add("Authorization", basicAuth);
+
+        // Combine headers and body
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        try {
+            // Send the POST request
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    requestEntity,
+                    String.class
+            );
+            return "Email sent successfully to " + to + ". Response: " + response.getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Failed to send email. Error: " + e.getMessage();
+        }
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        String to = "ashishmangal1692@gmail.com"; // Replace with the recipient's email
+        String subject = "Welcome Email";
+        String body = "This is an automated email sent when the application starts.";
+        System.out.println("Sending email on application startup...");
+        String response = sendEmail(to, subject, body);
+        System.out.println(response);
+    }
+}
