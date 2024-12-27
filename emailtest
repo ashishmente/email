@@ -1,0 +1,66 @@
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Base64;
+
+public class EmailSender {
+    private static final String MAILGUN_API_KEY = "e256f0cb3910c28032c6a6702845ed94-2e68d0fb-eb7226d4";
+    private static final String MAILGUN_DOMAIN = "sandbox083fda45960244258072b09b828fad8d.mailgun.org";
+    private static final String MAILGUN_BASE_URL = "https://api.mailgun.net/v3";
+
+    public static void main(String[] args) {
+        String to = "ashishmangal1692@gmail.com";  // Replace with recipient's email
+        String subject = "Welcome Email";
+        String body = "This is an automated email sent from Java.";
+        
+        System.out.println("Sending email...");
+        String response = sendEmail(to, subject, body);
+        System.out.println(response);
+    }
+
+    public static String sendEmail(String to, String subject, String body) {
+        try {
+            String url = MAILGUN_BASE_URL + "/" + MAILGUN_DOMAIN + "/messages";
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+            // Set up the connection
+            con.setRequestMethod("POST");
+            String auth = "Basic " + Base64.getEncoder().encodeToString(("api:" + MAILGUN_API_KEY).getBytes());
+            con.setRequestProperty("Authorization", auth);
+
+            // Create the request body
+            String urlParameters = "from=Test User <mailgun@" + MAILGUN_DOMAIN + ">"
+                    + "&to=" + to
+                    + "&subject=" + subject
+                    + "&text=" + body;
+
+            // Send the request
+            con.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            wr.writeBytes(urlParameters);
+            wr.flush();
+            wr.close();
+
+            // Get the response
+            int responseCode = con.getResponseCode();
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            return "Email sent successfully! Response code: " + responseCode 
+                   + "\nResponse: " + response.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Failed to send email. Error: " + e.getMessage();
+        }
+    }
+}
