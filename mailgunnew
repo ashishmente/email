@@ -1,0 +1,84 @@
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+public class EmailSender {
+    private static final String MAILGUN_API_KEY = "2ab214c16a68582d9d0e7616ccb37ba5-2e68d0fb-a667afe6";
+    private static final String MAILGUN_DOMAIN = "sandbox1642557b13aa49b39ffde2a93c3d6aee.mailgun.org";
+    private static final String MAILGUN_BASE_URL = "https://api.mailgun.net/v3";
+
+    public static void main(String[] args) {
+        String to = "ashishmangalweb@gmail.com";  // Replace with recipient's email
+        String subject = "Welcome Email";
+        String body = "This is an automated email sent from Java.";
+        
+        System.out.println("Sending email...");
+        String response = sendEmail(to, subject, body);
+        System.out.println(response);
+    }
+
+    public static String sendEmail(String to, String subject, String body) {
+        try {
+            // URL encode the parameters
+            String encodedTo = URLEncoder.encode(to, StandardCharsets.UTF_8.toString());
+            String encodedSubject = URLEncoder.encode(subject, StandardCharsets.UTF_8.toString());
+            String encodedBody = URLEncoder.encode(body, StandardCharsets.UTF_8.toString());
+            String encodedFrom = URLEncoder.encode("Test User <mailgun@" + MAILGUN_DOMAIN + ">", StandardCharsets.UTF_8.toString());
+
+            String url = MAILGUN_BASE_URL + "/" + MAILGUN_DOMAIN + "/messages";
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+            // Set up the connection
+            con.setRequestMethod("POST");
+            String auth = Base64.getEncoder().encodeToString(("api:" + MAILGUN_API_KEY).getBytes(StandardCharsets.UTF_8));
+            con.setRequestProperty("Authorization", "Basic " + auth);
+            con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+            // Create the request body
+            String urlParameters = String.format("from=%s&to=%s&subject=%s&text=%s",
+                                               encodedFrom, encodedTo, encodedSubject, encodedBody);
+
+            // Send the request
+            con.setDoOutput(true);
+            try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+                wr.writeBytes(urlParameters);
+                wr.flush();
+            }
+
+            // Check if there's an error response
+            int responseCode = con.getResponseCode();
+            if (responseCode >= 400) {
+                try (BufferedReader err = new BufferedReader(new InputStreamReader(con.getErrorStream()))) {
+                    StringBuilder errorResponse = new StringBuilder();
+                    String line;
+                    while ((line = err.readLine()) != null) {
+                        errorResponse.append(line);
+                    }
+                    return "Failed to send email. Response code: " + responseCode + 
+                           "\nError: " + errorResponse.toString();
+                }
+            }
+
+            // Get the success response
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                return "Email sent successfully! Response code: " + responseCode + 
+                       "\nResponse: " + response.toString();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Failed to send email. Error: " + e.getMessage();
+        }
+    }
+}
