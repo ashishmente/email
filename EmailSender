@@ -1,0 +1,48 @@
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.util.Properties;
+
+public class EmailSender {
+    private static final String FROM_EMAIL = "ashishmangalmente@gmail.com"; // Your email
+    private static final String EMAIL_PASSWORD = "cmzj waeq rrut swbq";     // Your app password
+    private static final String TO_EMAIL = "ashishmangal45@gmail.com";      // Recipient email
+
+    public static void main(String[] args) {
+        sendEmail();
+    }
+
+    private static void sendEmail() {
+        // Set up mail server properties
+        Properties props = new Properties();
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+
+        // Create session with authenticator
+        Session session = Session.getInstance(props, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(FROM_EMAIL, EMAIL_PASSWORD);
+            }
+        });
+
+        try {
+            // Create message
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(FROM_EMAIL));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(TO_EMAIL));
+            message.setSubject("Test Email from terminal");
+            message.setText("Hello");
+
+            // Send message
+            Transport.send(message);
+            System.out.println("Email sent successfully!");
+
+        } catch (MessagingException e) {
+            System.err.println("Error sending email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+}
