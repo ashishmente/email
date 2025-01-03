@@ -1,0 +1,45 @@
+import java.util.Properties;
+import jakarta.mail.*;
+import jakarta.mail.internet.*;
+
+public class EmailtestApplication {
+
+    public static void main(String[] args) {
+        String host = "live.smtp.mailtrap.io"; // Replace with your SMTP server
+        String port = "25";                      // SMTP port
+        String to = "ashishmangalmente@gmail.com"; // Recipient email
+        String username = "smtp@mailtrap.io";       // Your SMTP username
+        String password = "2551fa70feb1d74c105375b53772c708";       // Your SMTP password
+
+        // Set properties
+        Properties props = new Properties();
+        props.put("mail.smtp.host", host);
+        props.put("mail.smtp.port", port);
+        props.put("mail.smtp.auth", "true"); // Enable authentication
+        props.put("mail.smtp.starttls.enable", "true"); // Enable STARTTLS for security
+
+        // Create session with authentication
+        Session session = Session.getInstance(props, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(username, password);
+            }
+        });
+
+        try {
+            // Create email message
+            MimeMessage message = new MimeMessage(session);
+            message.setFrom(new InternetAddress("hello@demomailtrap.com"));
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+            message.setSubject("Test Email from mailtrap SMTP");
+            message.setText("This is a test email sent from a local SMTP server with authentication.");
+
+            // Send message
+            Transport.send(message);
+            System.out.println("Email sent successfully!");
+
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+}
