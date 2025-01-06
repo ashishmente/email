@@ -46,3 +46,9 @@ public class EmailSender {
         }
     }
 }
+
+
+
+Javac -cp "javax.mail-1.6.2.jar:activation-1.1.jar" EmailSender.java
+Java -cp ".:javax.mail-1.6.2.jar:activation-1.1.jar" EmailSender
+ 
